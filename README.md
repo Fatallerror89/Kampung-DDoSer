@@ -7,5 +7,8 @@ It generates a configurable number of random GET requests and sends them to the 
 # Usage
 
 ```
-Kampung-DDos.py < Hostname > < Port > < Number_of_Attacks >
+git clone https://github.com/Fatallerror89/Kampung-DDoSer.git
+cd Kampung-DDoSer
+ls
+python3 Kampung-DDos.py < Hostname > < Port > < Number_of_Attacks >
 ```
