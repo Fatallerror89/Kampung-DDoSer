@@ -7,5 +7,5 @@ It generates a configurable number of random GET requests and sends them to the 
 # Usage
 
 ```
-pyflooder.py < Hostname > < Port > < Number_of_Attacks >
+Kampung-DDos.py < Hostname > < Port > < Number_of_Attacks >
 ```
