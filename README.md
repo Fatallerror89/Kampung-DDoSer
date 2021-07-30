@@ -1,4 +1,4 @@
-# PyFlooder
+# Kampung Flooder
 An [HTTP Flood](https://en.m.wikipedia.org/wiki/HTTP_Flood) Python script that could stop a normal website in 10s
 
 # How does it work ?
